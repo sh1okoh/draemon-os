@@ -1,38 +1,70 @@
 # Doraemon OS Starter
 
-Claude を 1 つの provider として扱いながら、将来的にローカル LLM に差し替えられるようにした最小構成です。
+Doraemon OS Starter は、LLM を単なる会話相手ではなく、**外部記憶・状態認識・計画生成を持つ OS** として使うための最小構成です。
 
-このスターターは次を含みます。
+このプロジェクトの目的は、以下を実現することです。
 
-- Docker Compose で起動する `Postgres + pgvector`
-- Docker Compose で起動する `FalkorDB`
-- TypeScript 製の `memory/state/planner API`
-- provider 抽象化 (`AnthropicCompatibleProvider` と `NoopProvider`)
-- GraphDB と VectorDB の両方に episode を保存する基礎実装
-- 朝のブリーフを生成する `daily brief` エンドポイント
-- Claude Code から叩く前提のサンプル設定
+- 過去の知識を構造化して保持する
+- 現在の状態を外部シグナルから持つ
+- 今必要な情報を自動想起する
+- 今日やることを整理する
+- Claude / local LLM / 他 provider を差し替え可能にする
 
-## 何ができるか
+---
 
-- セッション終了時の要約を保存する
-- 今日の状態を JSON で入れる
-- 似た episode と関連 graph 情報を一緒に引く
-- 朝用の brief を生成する
-- モデルはあとから Claude / Ollama / OpenAI-compatible に差し替えられる
+## 特徴
 
-## ざっくり構成
+### 1. 長期記憶を外部化する
+記憶をモデル内部に閉じ込めず、外部ストアに保存します。
+
+- **VectorDB**: 類似検索に使う
+- **GraphDB**: 関係性や因果を辿る
+
+これにより、「似ている過去」と「つながっている過去」を両方扱えます。
+
+### 2. 状態を持てる
+会話だけでなく、現在の状態を外から保存できます。
+
+例:
+
+- 会議密度
+- blocked topic
+- GitHub / CI 状況
+- energy / focus
+
+### 3. 自動想起できる
+人が履歴を探さなくても、今の文脈から必要な過去を取り出すことを前提にしています。
+
+### 4. 計画を作れる
+状態と最近の記録をもとに、以下のような brief を生成できます。
+
+- 今日やること 3 つ
+- まずやる理由
+- 確認質問 1 つ
+
+### 5. マルチプロバイダー
+特定モデルに固定しません。
+
+- Claude
+- Ollama
+- OpenAI-compatible
+- 将来の local LLM
+
+のように切り替えられる前提で設計しています。
+
+---
+
+## アーキテクチャ
 
 ```text
-Claude Code / Slack / CLI
-            ↓
-     memory & state API
-      ↓             ↓
-  pgvector       FalkorDB
-      ↓             ↓
- 類似検索        関係検索
-      \\           /
-        planner / brief
-            ↓
-        provider layer
-  (Claude / Ollama / local)
-```
+CLI / Claude Code / Slack / Scheduler
+                  ↓
+           Memory & State API
+      ↓            ↓             ↓
+  VectorDB      GraphDB       State Store
+      \            |             /
+       \           |            /
+            Recall / Planner
+                  ↓
+          Provider Abstraction
+(Claude / Ollama / OpenAI-compatible / local)
