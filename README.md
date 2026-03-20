@@ -68,3 +68,51 @@ CLI / Claude Code / Slack / Scheduler
                   ↓
           Provider Abstraction
 (Claude / Ollama / OpenAI-compatible / local)
+```
+
+## できること
+
+### 現在
+- episode を保存する
+- state を保存する
+- 類似する記録を引く
+- 関連する graph 情報を引く
+- state と最近の記録から brief を生成する
+- provider を切り替える
+
+### 今後
+- 朝昼夜の自発介入
+- GitHub / CI / Calendar ingestion
+- embedding の本実装
+- graph ontology 強化
+- notifier 追加
+- text / image / embedding の provider routing
+
+## なぜ GraphDB と VectorDB の両方を使うのか
+### VectorDB
+- 類似する過去を探す
+- 曖昧検索に強い
+- 似た障害や設計メモを見つける
+
+### GraphDB
+- 関係性を辿る
+- 因果や依存を表現する
+- 判断と影響範囲をつなぐ
+
+この 2 つを分けることで、検索と関係探索を両立できます。
+
+## なぜマルチプロバイダーなのか
+- 能力ごとに強いモデルが違う
+- ベンダーロックインを避けたい
+- 同じ記憶基盤を複数モデルで共有したい
+- 将来的に local LLM へ置き換えたい
+
+このため、モデルは固定せず、交換可能な provider として扱います。
+
+## 技術スタック
+- Node.js 25
+- Fastify
+- TypeScript
+- PostgreSQL + pgvector
+- FalkorDB
+- Docker Compose
