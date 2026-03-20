@@ -116,3 +116,26 @@ CLI / Claude Code / Slack / Scheduler
 - PostgreSQL + pgvector
 - FalkorDB
 - Docker Compose
+
+## Claude Code hook example
+Claude Code から記憶基盤を呼ぶ例です。  
+セッション開始時に関連コンテキストを読み込み、タスク完了時に要約を保存します。
+
+`.claude/settings.local.json`
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "command": "bash scripts/context-load.sh"
+      }
+    ],
+    "TaskCompleted": [
+      {
+        "command": "bash scripts/context-save.sh \"task completed\""
+      }
+    ]
+  }
+}
+```
