@@ -5,3 +5,6 @@ up:
 
 down:
 	docker compose down
+
+ps:
+	docker compose ps
