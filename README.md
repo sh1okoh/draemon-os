@@ -1,4 +1,4 @@
-# Doraemon OS Starter
+# Draemon OS Starter
 
 Doraemon OS Starter は、LLM を単なる会話相手ではなく、**外部記憶・状態認識・計画生成を持つ OS** として使うための最小構成です。
 
