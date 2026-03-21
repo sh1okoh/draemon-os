@@ -11,6 +11,10 @@ API_URL="${API_URL:-http://localhost:8080}"
 PROJECT="${PROJECT:-default}"
 SUMMARY="${1:-Claude session completed. Capture a short summary here.}"
 
+# DEBUG: stdinをログに保存
+STDIN_DATA=$(cat)
+echo "$STDIN_DATA" > /tmp/hook_stdin_debug.json
+
 JSON_PAYLOAD="$(python3 - <<'PY' "$PROJECT" "$SUMMARY"
 import json
 import sys
