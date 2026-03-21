@@ -41,7 +41,7 @@ async function main(): Promise<void> {
   await queueService.connect().catch((error) => {
     app.log.warn({ error }, 'queue redis connection failed, continuing without queue worker');
   });
-  const summarizerService = new SummarizerService(provider);
+  const summarizerService = new SummarizerService(provider, config.model.useModel);
   const workerService = new WorkerService(queueService, summarizerService, memoryService);
   workerService.start();
 
