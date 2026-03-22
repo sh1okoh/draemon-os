@@ -19,6 +19,7 @@ export const config = {
     baseUrl: process.env.MODEL_BASE_URL ?? 'http://localhost:11434',
     apiKey: process.env.MODEL_API_KEY ?? '',
     modelName: process.env.MODEL_NAME ?? 'qwen2.5-coder:14b',
-    useModel: String(process.env.USE_MODEL ?? 'false').toLowerCase() === 'true'
+    useModel: String(process.env.USE_MODEL ?? 'false').toLowerCase() === 'true',
+    providerType: process.env.PROVIDER_TYPE ?? 'ollama'
   }
 };

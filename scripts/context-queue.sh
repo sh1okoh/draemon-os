@@ -19,53 +19,46 @@ if [ "$STOP_HOOK_ACTIVE" = "True" ]; then
   exit 0
 fi
 
-# last_assistant_message（Claudeの最終回答）を取り出す
-LAST_MESSAGE=$(python3 -c "import json,sys; d=json.loads(sys.argv[1]); print(d.get('last_assistant_message', ''))" "$STDIN_DATA" 2>/dev/null || echo "")
-
-# transcript_pathからセッション内容を補完（任意）
+# transcript_pathからセッションの会話履歴を抽出
 TRANSCRIPT_PATH=$(python3 -c "import json,sys; d=json.loads(sys.argv[1]); print(d.get('transcript_path', ''))" "$STDIN_DATA" 2>/dev/null || echo "")
-TRANSCRIPT_SUMMARY=""
+RAW_CONTENT="task completed"
 if [ -n "$TRANSCRIPT_PATH" ] && [ -f "$TRANSCRIPT_PATH" ]; then
-  TRANSCRIPT_SUMMARY=$(python3 - "$TRANSCRIPT_PATH" <<'PY'
+  RAW_CONTENT=$(python3 - "$TRANSCRIPT_PATH" <<'PY'
 import json, sys
 
 path = sys.argv[1]
-messages = []
+exchanges = []
 with open(path) as f:
     for line in f:
         try:
             d = json.loads(line)
-            if d.get("type") == "user":
+            role = d.get("type")
+            if role == "user":
                 data = d.get("data", {})
                 if isinstance(data, dict):
                     for block in data.get("content", []):
                         if isinstance(block, dict) and block.get("type") == "text":
                             text = block["text"].strip()
                             if text and not text.startswith("<"):
-                                messages.append(f"User: {text[:200]}")
+                                exchanges.append(f"User: {text[:300]}")
+                                break
+            elif role == "assistant":
+                data = d.get("data", {})
+                if isinstance(data, dict):
+                    for block in data.get("content", []):
+                        if isinstance(block, dict) and block.get("type") == "text":
+                            text = block["text"].strip()
+                            if text:
+                                exchanges.append(f"Assistant: {text[:300]}")
                                 break
         except Exception:
             continue
 
-print("\n".join(messages[-5:]))
+result = "\n".join(exchanges[-10:])
+print(result if result else "task completed")
 PY
   )
 fi
-
-RAW_CONTENT=$(python3 - <<'PY' "$LAST_MESSAGE" "$TRANSCRIPT_SUMMARY"
-import sys
-last_msg = sys.argv[1].strip()
-transcript = sys.argv[2].strip()
-
-parts = []
-if last_msg:
-    parts.append(f"[Claude最終回答]\n{last_msg[:2000]}")
-if transcript:
-    parts.append(f"[直近のユーザー発言]\n{transcript}")
-
-print("\n\n".join(parts) if parts else "task completed")
-PY
-)
 
 JSON_PAYLOAD=$(python3 -c "
 import json, sys

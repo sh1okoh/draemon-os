@@ -6,6 +6,7 @@ import { registerPlannerRoutes } from './routes/planner';
 import { registerQueueRoutes } from './routes/queue';
 import { registerStateRoutes } from './routes/state';
 import { AnthropicCompatibleProvider } from './providers/anthropicCompatibleProvider';
+import { OllamaProvider } from './providers/ollamaProvider';
 import { NoopProvider } from './providers/noopProvider';
 import { EpisodeRepository } from './repositories/episodeRepository';
 import { GraphRepository } from './repositories/graphRepository';
@@ -29,11 +30,16 @@ async function main(): Promise<void> {
   const stateRepository = new StateRepository();
   const memoryService = new MemoryService(episodeRepository, graphRepository);
   const provider = config.model.useModel
-    ? new AnthropicCompatibleProvider({
-        baseUrl: config.model.baseUrl,
-        apiKey: config.model.apiKey,
-        modelName: config.model.modelName
-      })
+    ? config.model.providerType === 'anthropic'
+      ? new AnthropicCompatibleProvider({
+          baseUrl: config.model.baseUrl,
+          apiKey: config.model.apiKey,
+          modelName: config.model.modelName
+        })
+      : new OllamaProvider({
+          baseUrl: config.model.baseUrl,
+          modelName: config.model.modelName
+        })
     : new NoopProvider();
   const plannerService = new PlannerService(stateRepository, memoryService, provider);
 
